@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>MyTask</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/css/bootstrap.min.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <div class="loader" style="display:none;"></div>
+  <div class="container">
+    <div class="row">
+      <div class="col-md-6">
+        <br>
+        <center><h3>Add New Task</h3></center>
+        <div style="padding:5%;">
+          <input type="text" id="name" name="name" placeholder="Note's Name" required class="form-control optionCss" autocomplete="off">
+          <textarea name="text" id="text" cols="30" rows="5" class="form-control optionCss" placeholder="Note's Detail" autocomplete="off"></textarea>
+          <button id="add" class="btn btn-block btn-primary optionCss">Add New task</button>
+          <center><span id="loadingnew" style="display:none;margin-top:5px;">Add new data...</span></center>
+        </div>
+      </div>
+
+      <div class="col-md-6">
+          <br>
+          <center><h3>List of Task!</h3><br><span id="loaddata">Loading Data...</span></center>
+          <span id="lists"></span>
+      </div>
+    </div>
+  </div>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://unpkg.com/ionicons@4.1.2/dist/ionicons.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.0/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.0/js/bootstrap.min.js"></script>
+  <script>    
+    $(document).ready(function(e) {
+        $('.loader').show();
+        $.ajax({
+            method: "GET",
+            url: 'https://us-central1-mytask-32d5a.cloudfunctions.net/list',
+            success: function(data) {
+              let msg = data.msg;
+              if (msg.length) {
+                let html = '<div id="thelists" class="list-group listlimit">';
+                msg.forEach( function(list) {
+                  html += `<div class="list-group-item list-group-item-action flex-column align-items-start">
+                              <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1"><b>`+list.name+`</b></h5>
+                              </div>
+                              <p class="mb-1">`+list.text+`</p>
+                              <hr>
+                              <span data-id="`+list.id+`" class="deletethis btn btn-sm btn-outline-danger" style="float:right;"><ion-icon name="trash"></ion-icon></span>
+                              <span id="loading`+list.id+`" style="float:right;display:none;">Delete this data...</span>
+                          </div>`;
+                });
+                html += '</div>';
+                $('#loaddata').hide();
+                $('#lists').html(html);
+                $('.loader').hide();
+              } else {
+                $('#loaddata').hide();
+                $('#lists').html('<center><ion-icon name="help-circle-outline"></ion-icon><br><span>--- No Task For Now! ---</span></center>');
+                $('.loader').hide();
+              }
+            }
+        });
+    });
+
+    $('#add').on('click', function(e) {
+      if ($('#name').val()=="") alert('Name cannot be empty!');
+      else if ($('#text').val()=="") alert('Text cannot be empty!');
+      $('.loader').show();
+      $(this).hide();
+      $('#loadingnew').show();
+
+      $.ajax({
+            method: "GET",
+            url: 'https://us-central1-mytask-32d5a.cloudfunctions.net/add?name='+$('#name').val()+'&text='+$('#text').val(),
+            success: function(data) {
+              window.location.reload();
+            }
+      });
+    });
+
+    $(document).on('click', '.deletethis', function(e) {
+      let id = $(this).data('id');
+      $('.loader').show();
+      $(this).hide();
+      $('#loading'+id).show();
+
+      $.ajax({
+            method: "GET",
+            url: 'https://us-central1-mytask-32d5a.cloudfunctions.net/delete?id='+id,
+            success: function(data) {
+              window.location.reload();
+            }
+      });
+    });
+  </script>
+</body>
+</html>
